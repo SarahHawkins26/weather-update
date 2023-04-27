@@ -2,6 +2,7 @@
 var citySearchEl = document.querySelector('#citySearch')
 var weatherDisplay = document.querySelector
 var searchBtnEl = document.querySelector('#searchBtn')
+var searchHistoryEl = document.querySelector('#searchHistory');
 
 //add event listener click to the search button. So when clicked saveInput function is called
 searchBtnEl.addEventListener('click', saveInput)
@@ -9,16 +10,29 @@ searchBtnEl.addEventListener('click', saveInput)
 //saveInput function gets the value citySearch input and calls getWeather function with the value of now currentCity
 function saveInput(){
     var currentCity = citySearchEl.value
-    console.log(currentCity)
-    getWeather(currentCity)
-}
+    //retrieves city list from local storage
+    var cityList = JSON.parse(localStorage.getItem('cities')) || [];
+    //adds input city to the list
+    cityList.push(currentCity);
+    //store updated list in local storage
+    localStorage.setItem('cities', JSON.stringify(cityList));
 
+    //makes the stored input cities into buttons
+     var newBtn = document.createElement('button');
+     newBtn.textContent = currentCity;
+     newBtn.addEventListener('click', function(){
+        getWeather(currentCity);
+     });
+     //appends button to the search history element
+     searchHistoryEl.appendChild(newBtn);
+     
+     getWeather(currentCity);
+}
 //defining getWeather function and takes the argument by currentCity and grabs the location in the API call to get weather data for that location
 getWeather();
 function getWeather(location){
-
     //putting the geocode api which, converts the specified name of a location or zip/post code into the exact geographical coordinates, into a variable
-    var geoCodeUrl = 'http://api.openweathermap.org/geo/1.0/direct?q=' + location + '&appid=01419ff8550f356d26c30e63536b2aea'
+    var geoCodeUrl = 'https://api.openweathermap.org/geo/1.0/direct?q=' + location + '&appid=01419ff8550f356d26c30e63536b2aea'
     
     //making  fetch request for the geocode API which will return json data with lat and lon coords for the location we searched
     fetch(geoCodeUrl)
@@ -26,9 +40,6 @@ function getWeather(location){
     return response.json();
     })
     .then(function (data){
-        console.log(data)
-    console.log(data[0].lat)
-
     //saving lat and lon coords to variables to use for the second API call for weather data
     var lat = data[0].lat
     var lon = data[0].lon
@@ -42,11 +53,10 @@ function getWeather(location){
     return response.json();
     })
     .then(function (data){
-    console.log(data)
-    console.log(data.dt)
     // parsing the date from JSON data and saving it to a variable
     var date = new Date(data.dt * 1000);
     // var timeDate = document.querySelector('#currentDate').innerHTML = date.toDateString();
+
     //current variables saving various weather data so it can displayed on to page
     var currentCityEl = document.querySelector('#currentCity').innerHTML = data.name
     var currentDateEl = document.querySelector("#currentDate").innerHTML = date
@@ -63,8 +73,6 @@ function getWeather(location){
     return response.json();
     })
     .then(function (data){
-        console.log(data)
-        console.log(data.city.name)
         //days variables saving various weather data so it can displayed on to page
         var day1DateEl = document.querySelector("#day1Date").innerHTML = data.list[0].dt_txt
         var iconImg1 = 'http://openweathermap.org/img/w/' + data.list[0].weather[0].icon + '.png'
